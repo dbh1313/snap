@@ -1,0 +1,1 @@
+#define MAX_CARDS_PER_QUEST 52
