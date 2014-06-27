@@ -774,8 +774,8 @@
 			isa = PBXGroup;
 			children = (
 				908F1BD8195CB9E300C1AE4B /* ClientGameViewController.h */,
-				908F1BDB195CB9EE00C1AE4B /* ClientGameViewController.xib */,
 				908F1BD9195CB9E300C1AE4B /* ClientGameViewController.m */,
+				908F1BDB195CB9EE00C1AE4B /* ClientGameViewController.xib */,
 				7BF49E2E14E1FCF400AB8472 /* MainViewController.h */,
 				7BF49E2F14E1FCF400AB8472 /* MainViewController.m */,
 				7BF49E3314E1FD3200AB8472 /* MainViewController.xib */,

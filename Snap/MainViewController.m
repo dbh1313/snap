@@ -286,7 +286,7 @@
      {
          _performAnimations = YES;
          
-         [self startGameWithBlock:^(Game *game)
+         [self startClientGameWithBlock:^(Game *game)
           {
               [game startClientGameWithSession:session playerName:name server:peerID];
           }];
@@ -350,7 +350,7 @@
 
 - (void)startClientGameWithBlock:(void (^)(Game *))block
 {
-	GameViewController *gameViewController = [[GameViewController alloc] initWithNibName:@"GameViewController" bundle:nil];
+	GameViewController *gameViewController = [[GameViewController alloc] initWithNibName:@"ClientGameViewController" bundle:nil];
 	gameViewController.delegate = self;
     
 	[self presentViewController:gameViewController animated:NO completion:^
