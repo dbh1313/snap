@@ -13,6 +13,7 @@
 #import "PacketOtherClientQuit.h"
 #import "Card.h"
 #import "PacketDealCards.h"
+#import "PacketUpdateCards.h"
 #import "PacketActivatePlayer.h"
 
 const size_t PACKET_HEADER_SIZE = 10;
@@ -71,6 +72,10 @@ const size_t PACKET_HEADER_SIZE = 10;
 			packet = [PacketDealCards packetWithData:data];
 			break;
             
+        case PacketTypeUpdateCards:
+			packet = [PacketUpdateCards packetWithData:data];
+			break;
+            
         case PacketTypeActivatePlayer:
 			packet = [PacketActivatePlayer packetWithData:data];
 			break;            
@@ -126,6 +131,7 @@ const size_t PACKET_HEADER_SIZE = 10;
          {
              Card *card = [array objectAtIndex:t];
              [data rw_appendInt8:card.file];
+             [data rw_appendInt8:card.value];
          }
      }];
 }
@@ -154,7 +160,7 @@ const size_t PACKET_HEADER_SIZE = 10;
 			int value = [data rw_int8AtOffset:offset];
 			offset += 1;
             
-			Card *card = [[Card alloc] initWithFile:file];
+			Card *card = [[Card alloc] initWithFile:file value:value];
 			[array addObject:card];
 		}
         

@@ -105,7 +105,7 @@
 {
 	[super viewDidLoad];
     
-	self.centerLabel.font = [UIFont rw_snapFontWithSize:18.0f];
+//	self.centerLabel.font = [UIFont rw_snapFontWithSize:18.0f];
     
 	self.snapButton.hidden = YES;
 	self.nextRoundButton.hidden = YES;
@@ -347,7 +347,7 @@
 				CardView *cardView = [[CardView alloc] initWithFrame:CGRectMake(0, 0, CardWidth, CardHeight)];
 				cardView.card = [player.closedCards cardAtIndex:t];
 				[self.cardContainerView addSubview:cardView];
-				[cardView animateDealingToPlayer:player withDelay:delay];
+				[cardView animateDealingToPlayer:player withDelay:delay isServer:NO];
 				delay += 0.1f;
 			}
 		}

@@ -8,10 +8,9 @@
 
 #import "CardView.h"
 #import "Card.h"
+#import "Stack.h"
 #import "Player.h"
-
-const CGFloat CardWidth = 67.0f;   // this includes drop shadows
-const CGFloat CardHeight = 99.0f;
+#import "GameGlobals.h"
 
 @implementation CardView
 {
@@ -43,13 +42,17 @@ const CGFloat CardHeight = 99.0f;
 	}
 }
 
-- (void)animateDealingToPlayer:(Player *)player withDelay:(NSTimeInterval)delay
+- (void)animateDealingToPlayer:(Player *)player withDelay:(NSTimeInterval)delay isServer:(BOOL)isServer
 {
 	self.frame = CGRectMake(-100.0f, -100.0f, CardWidth, CardHeight);
 	self.transform = CGAffineTransformMakeRotation(M_PI);
     
 	CGPoint point = [self centerForPlayer:player];
 	_angle = [self angleForPlayer:player];
+    
+    if (isServer) {
+        self.alpha = 0.0f;
+    }
     
 	[UIView animateWithDuration:0.2f
                           delay:delay
@@ -75,49 +78,15 @@ const CGFloat CardHeight = 99.0f;
     
 	if (self.card.isTurnedOver)
 	{
-		if (player.position == PlayerPositionBottom)
-		{
-			x += midX + 7.0f;
-			y += maxY - CardHeight - 30.0f;
-		}
-		else if (player.position == PlayerPositionLeft)
-		{
-			x += 31.0f;
-			y += midY - 30.0f;
-		}
-		else if (player.position == PlayerPositionTop)
-		{
-			x += midX - CardWidth - 7.0f;
-			y += 29.0f;
-		}
-		else
-		{
-			x += maxX - CardHeight + 1.0f;
-			y += midY - CardWidth - 45.0f;
-		}	
-	}
+//        x += midX + 7.0f;
+        x += CardWidth + 7.0f;
+        y += 150.0f;
+    }
 	else
 	{
-		if (player.position == PlayerPositionBottom)
-		{
-			x += midX - CardWidth - 7.0f;
-			y += maxY - CardHeight - 30.0f;
-		}
-		else if (player.position == PlayerPositionLeft)
-		{
-			x += 31.0f;
-			y += midY - CardWidth - 45.0f;
-		}
-		else if (player.position == PlayerPositionTop)
-		{
-			x += midX + 7.0f;
-			y += 29.0f;
-		}
-		else
-		{
-			x += maxX - CardHeight + 1.0f;
-			y += midY - 30.0f;
-		}
+//        x += midX - CardWidth - 7.0f;
+        x += CardWidth - 50.0f;
+        y += 115.0f;
 	}
     
 	return CGPointMake(x, y);
@@ -138,7 +107,7 @@ const CGFloat CardHeight = 99.0f;
 		_frontImageView.hidden = YES;
 		[self addSubview:_frontImageView];
         
-		NSString *filename = [NSString stringWithFormat:@"Demo-%i", self.card.file];
+		NSString *filename = [NSString stringWithFormat:@"Demo-%i", 0/*self.card.file*/];
 		_frontImageView.image = [UIImage imageNamed:filename];
 	}
 }
@@ -146,13 +115,6 @@ const CGFloat CardHeight = 99.0f;
 - (CGFloat)angleForPlayer:(Player *)player
 {
 	float theAngle = (-0.5f + RANDOM_FLOAT()) / 4.0f;
-    
-	if (player.position == PlayerPositionLeft)
-		theAngle += M_PI / 2.0f;
-	else if (player.position == PlayerPositionTop)
-		theAngle += M_PI;
-	else if (player.position == PlayerPositionRight)
-		theAngle -= M_PI / 2.0f;
     
 	return theAngle;
 }
@@ -162,14 +124,25 @@ const CGFloat CardHeight = 99.0f;
 	[self loadFront];
 	[self.superview bringSubviewToFront:self];
     
+    float screenWidth = [UIScreen mainScreen].applicationFrame.size.height; // hackday, too lazy to get proper orientation
+    
 	UIImageView *darkenView = [[UIImageView alloc] initWithFrame:self.bounds];
 	darkenView.backgroundColor = [UIColor clearColor];
 	darkenView.image = [UIImage imageNamed:@"Darken"];
 	darkenView.alpha = 0.0f;
 	[self addSubview:darkenView];
-    
+
 	CGPoint startPoint = self.center;
 	CGPoint endPoint = [self centerForPlayer:player];
+    endPoint.y = PLAYER_CARD_ROW_Y;
+    
+    // Calculate x position based on card and total cards
+    int totalCards = player.closedCards.cardCount + player.openCards.cardCount;
+    int thisCard = (totalCards - player.closedCards.cardCount) - 1;  // account for "this" card already dealt
+    float cardContainerWidth = (screenWidth / (float)totalCards) - 35.0f;
+    endPoint.x = ((float)thisCard * cardContainerWidth) + ((cardContainerWidth - CardWidth) / 2.0f) + 150.0f;
+    
+    
 	CGFloat afterAngle = [self angleForPlayer:player];
     
 	CGPoint halfwayPoint = CGPointMake((startPoint.x + endPoint.x)/2.0f, (startPoint.y + endPoint.y)/2.0f);
@@ -217,5 +190,73 @@ const CGFloat CardHeight = 99.0f;
           }];
      }];
 }
+
+- (void)animateCardOnOffForPlayerWithDirection:(int)direction
+{
+	[self loadFront];
+	[self.superview bringSubviewToFront:self];
+	CGPoint endPoint = self.center;
+    
+    // Calculate x position and y position for top row
+    if (direction > 0) {
+        endPoint.y = PLAYER_CARD_ROW_ON_Y;
+    }
+    else {
+        endPoint.y = PLAYER_CARD_ROW_Y;
+    }
+    
+    [UIView animateWithDuration:0.15f
+                       delay:0
+                     options:UIViewAnimationOptionCurveEaseOut
+                  animations:^
+    {
+      CGRect rect = _frontImageView.bounds;
+      rect.size.width = CardWidth;
+      _frontImageView.bounds = rect;
+      
+      self.center = endPoint;
+    }
+                  completion:^(BOOL finished)
+    {
+        NSLog(@"done animating card to on");
+    }];
+}
+
+- (void)animateCardOnOffForServer:(BOOL)on inSlot:(int)inSlot
+{
+	[self loadFront];
+    _frontImageView.bounds = _backImageView.bounds;
+    _frontImageView.hidden = NO;
+	[self.superview bringSubviewToFront:self];
+	CGPoint endPoint = self.center;
+    endPoint.y = SERVER_CARD_ROW_ON_Y;
+    
+    // Calculate x position based on card and total cards
+    float screenWidth = [UIScreen mainScreen].applicationFrame.size.height; // hackday, too lazy to get proper orientation
+    float cardContainerWidth = (screenWidth / (float)MAX_CORRECT_CARDS) - 35.0f;
+    endPoint.x = ((float)inSlot * cardContainerWidth) + ((cardContainerWidth - CardWidth) / 2.0f) + 150.0f;
+    self.center = endPoint;
+    
+    float destAlpha = 0.0f;
+    if (on) {
+        destAlpha = 1.0f;
+    }
+    else {
+        destAlpha = 0.0f;
+    }
+    
+    [UIView animateWithDuration:1.0f
+                          delay:0
+                        options:UIViewAnimationOptionCurveEaseOut
+                     animations:^
+     {
+         self.alpha = destAlpha;
+     }
+                     completion:^(BOOL finished)
+     {
+         NSLog(@"done animating card to on");
+     }];
+}
+
 
 @end

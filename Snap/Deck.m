@@ -15,23 +15,23 @@
 	NSMutableArray *_cards;
 }
 
-- (id)setUpCardsWith:(NSMutableArray*)files
+- (id)setUpCardsWith:(NSMutableArray*)files values:(NSMutableArray*)values
 {
     for (NSUInteger i = 0, count = MAX_CARDS_PER_QUEST; i < count; i++)
     {
-        Card *card = [[Card alloc] initWithFile:[[files lastObject] intValue]];
+        Card *card = [[Card alloc] initWithFile:[[files objectAtIndex:i] intValue] value:[[values objectAtIndex:i] intValue]];
         [_cards addObject:card];
     }
     
     return self;
 }
 
-- (id)initWithFiles:(NSMutableArray*)files
+- (id)initWithFiles:(NSMutableArray*)files values:(NSMutableArray *)values
 {
 	if ((self = [super init]))
 	{
         _cards = [[NSMutableArray alloc] initWithCapacity:MAX_CARDS_PER_QUEST];
-		[self setUpCardsWith:files];
+		[self setUpCardsWith:files values:values];
 	}
 	return self;
 }

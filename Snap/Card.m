@@ -13,13 +13,17 @@
 @synthesize file = _file;
 @synthesize value = _value;
 @synthesize isTurnedOver = _isTurnedOver;
+@synthesize isActive = _isActive;
+@synthesize inSlot = inSlot;
 
-- (id)initWithFile:(NSInteger)file
+- (id)initWithFile:(NSInteger)file value:(NSInteger)value
 {
 	if ((self = [super init]))
 	{
 		_file = file;
-        _value = 0;
+        _value = value;
+        _isActive = NO;
+        inSlot = -1;
 	}
 	return self;
 }

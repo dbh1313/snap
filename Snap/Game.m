@@ -16,8 +16,10 @@
 #import "Player.h"
 #import "Stack.h"
 #import "PacketDealCards.h"
+#import "PacketUpdateCards.h"
 #import "PacketActivatePlayer.h"
 #import "DDXML.h"
+#import "GameGlobals.h"
 
 typedef enum
 {
@@ -27,6 +29,7 @@ typedef enum
 	GameStatePlaying,
 	GameStateGameOver,
 	GameStateQuitting,
+	GameStateWin,
 }
 GameState;
 
@@ -45,6 +48,10 @@ GameState;
 
 @synthesize delegate = _delegate;
 @synthesize isServer = _isServer;
+@synthesize playerName = _playerName;
+@synthesize quest = _quest;
+@synthesize answer = _answer;
+@synthesize pointValue = _pointValue;
 
 - (id)init
 {
@@ -72,9 +79,13 @@ GameState;
 	_session.available = NO;
 	_session.delegate = self;
 	[_session setDataReceiveHandler:self withContext:nil];
+    _playerName = name;
     
 	_serverPeerID = peerID;
 	_localPlayerName = name;
+    
+    CardWidth = CLIENT_CARD_WIDTH;
+    CardHeight = CLIENT_CARD_HEIGHT;
     
 	_state = GameStateWaitingForSignIn;
     
@@ -90,16 +101,19 @@ GameState;
 	_session.delegate = self;
 	[_session setDataReceiveHandler:self withContext:nil];
     
+    CardWidth = SERVER_CARD_WIDTH;
+    CardHeight = SERVER_CARD_HEIGHT;
+    
 	_state = GameStateWaitingForSignIn;
     
 	[self.delegate gameWaitingForClientsReady:self];
     
-    // Create the Player object for the server.
-	Player *player = [[Player alloc] init];
-	player.name = name;
-	player.peerID = _session.peerID;
-	player.position = PlayerPositionBottom;
-	[_players setObject:player forKey:player.peerID];
+//    // Create the Player object for the server.
+//	Player *player = [[Player alloc] init];
+//	player.name = name;
+//	player.peerID = _session.peerID;
+//	player.position = PlayerPositionBottom;
+//	[_players setObject:player forKey:player.peerID];
     
 	// Add a Player object for each client.
 	int index = 0;
@@ -195,6 +209,13 @@ GameState;
 			}
 			break;
             
+        case PacketTypeUpdateCards:
+			if (_state == GameStatePlaying)
+			{
+				[self handleUpdateCardsPacket:(PacketUpdateCards *)packet];
+			}
+			break;
+            
         case PacketTypeActivatePlayer:
 			if (_state == GameStatePlaying)
 			{
@@ -237,6 +258,21 @@ GameState;
 	_state = GameStatePlaying;
     
 	[self.delegate gameShouldDealCards:self startingWithPlayer:startingPlayer];
+}
+
+- (void)handleUpdateCardsPacket:(PacketUpdateCards *)packet
+{
+//	[packet.cards enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop)
+//     {
+//         Player *player = [self playerWithPeerID:key];
+//         [player.closedCards addCardsFromArray:obj];
+//     }];
+//    
+//	Player *startingPlayer = [self playerWithPeerID:packet.startingPeerID];
+//	_activePlayerPosition = startingPlayer.position;
+//    
+//	Packet *responsePacket = [Packet packetWithType:PacketTypeClientUpdatedCards];
+//	[self sendPacketToServer:responsePacket];
 }
 
 - (BOOL)receivedResponsesFromAllPlayers
@@ -289,6 +325,14 @@ GameState;
 			}
 			break;
             
+        case PacketTypeUpdateCards:
+            // UpdateCardsHere
+            NSLog(@"Card Update from Client");
+//            [self updateServerCards:packet];
+            
+            [self.delegate gameUpdateServerCards:self card:((PacketUpdateCards*)packet).card];
+			break;
+            
 		default:
 			NSLog(@"Server received unexpected packet: %@", packet);
 			break;
@@ -310,6 +354,11 @@ GameState;
 		[self pickRandomStartingPlayer];
 		[self dealCards];
 	}
+}
+
+- (void)endGame
+{
+    _state = GameStateWin;
 }
 
 - (void)changeRelativePositionsOfPlayers
@@ -353,7 +402,8 @@ GameState;
 		_startingPlayerPosition = arc4random() % 4;
 	}
 	while ([self playerAtPosition:_startingPlayerPosition] == nil);
-    
+    _startingPlayerPosition = 1;
+    NSLog(@"Starting Player: %i", _startingPlayerPosition);
 	_activePlayerPosition = _startingPlayerPosition;
 }
 
@@ -366,21 +416,34 @@ GameState;
     NSString *filePath = [mainBundle pathForResource:@"demo" ofType:@"xml"];
     NSError *err = nil;
     DDXMLDocument *document = [[DDXMLDocument alloc] initWithData:[NSData dataWithContentsOfFile:filePath] options:0 error:&err];
+
+    // Read in question
+    NSArray* questXML = [document nodesForXPath:@"/deck/quests/quest" error:&err];
+    for(DDXMLElement* questObj in questXML)
+    {
+        _quest = [[[questObj elementsForName:@"title"] lastObject] stringValue];
+        _answer = [[[questObj elementsForName:@"answer"] lastObject] stringValue];
+        _pointValue = [[[questObj elementsForName:@"value"] lastObject] stringValue];
+    }
     
-    NSArray* cardsXML = [document nodesForXPath:@"/deck/quests/cards/card" error:&err]; // where ddDoc is your DDXMLDocument
+    // Read in cards
+    NSArray* cardsXML = [document nodesForXPath:@"/deck/quests/cards/card" error:&err];
     NSMutableArray *files = [[NSMutableArray alloc] initWithCapacity:MAX_CARDS_PER_QUEST];
+    NSMutableArray *values = [[NSMutableArray alloc] initWithCapacity:MAX_CARDS_PER_QUEST];
     
     for(DDXMLElement* cardObj in cardsXML)
     {
-        NSNumber* file = [NSNumber numberWithInt:[[[[cardObj elementsForName:@"img"] lastObject] stringValue] intValue]];
+        NSString* file = [[[cardObj elementsForName:@"img"] lastObject] stringValue];
+        NSString* value = [[[cardObj elementsForName:@"value"] lastObject] stringValue];
         [files addObject:file];
+        [values addObject:value];
     }
     
 #ifdef DEBUG
 	NSLog(@"Game: Loading Deck");
 #endif
     
-	Deck *deck = [[Deck alloc] initWithFiles:files];
+	Deck *deck = [[Deck alloc] initWithFiles:files values:values];
 	[deck shuffle];
     
 	while ([deck cardsRemaining] > 0)
@@ -514,6 +577,13 @@ GameState;
 
 #pragma mark - Networking
 
+- (void)updateServerCards:(Packet*)packet
+{
+    Card* card;
+    
+//    [self.delegate gameUpdateServerCards:card];
+}
+
 - (void)sendPacketToAllClients:(Packet *)packet
 {
 	GKSendDataMode dataMode = GKSendDataReliable;
@@ -568,12 +638,23 @@ GameState;
 
 - (void)turnCardForPlayerAtBottom
 {
-	if (_state == GameStatePlaying 
-		&& _activePlayerPosition == PlayerPositionBottom
-		&& [[self activePlayer].closedCards cardCount] > 0)
-	{
-		[self turnCardForPlayer:[self activePlayer]];
-	}
+    if (_state == GameStatePlaying)
+    {
+        // Find our player...
+        for (int i = 0; i < 4; i++)
+        {
+            Player *player = [self playerAtPosition:i];
+            if (player != nil && [self.playerName compare:player.name] == NSOrderedSame)
+            {
+                if ([player.closedCards cardCount] > 0)
+            //		&& _activePlayerPosition == PlayerPositionBottom
+            //		&& [[self activePlayer].closedCards cardCount] > 0))
+                {
+                    [self turnCardForPlayer:player];
+                }
+            }
+        }
+    }
 }
 
 - (void)turnCardForPlayer:(Player *)player

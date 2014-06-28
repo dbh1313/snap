@@ -17,7 +17,9 @@
 @property (nonatomic, assign, readonly) int file;
 @property (nonatomic, assign, readonly) int value;
 @property (nonatomic, assign) BOOL isTurnedOver;
+@property (nonatomic, assign) BOOL isActive;
+@property (nonatomic, assign) int inSlot;
 
-- (id)initWithFile:(NSInteger)file;
+- (id)initWithFile:(NSInteger)file value:(NSInteger)value;
 
 @end

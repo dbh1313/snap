@@ -216,6 +216,7 @@
 		908F1BF5195CC01800C1AE4B /* demo.xml in Resources */ = {isa = PBXBuildFile; fileRef = 908F1BF4195CC01800C1AE4B /* demo.xml */; };
 		908F1BF8195CD77600C1AE4B /* Demo-0.png in Resources */ = {isa = PBXBuildFile; fileRef = 908F1BF6195CD77600C1AE4B /* Demo-0.png */; };
 		908F1BF9195CD77600C1AE4B /* Demo-0@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 908F1BF7195CD77600C1AE4B /* Demo-0@2x.png */; };
+		908F1BFD195E1BB800C1AE4B /* PacketUpdateCards.m in Sources */ = {isa = PBXBuildFile; fileRef = 908F1BFC195E1BB800C1AE4B /* PacketUpdateCards.m */; };
 		E110A100156EC8DD0045AB96 /* Action_Man.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E110A0FF156EC8DD0045AB96 /* Action_Man.ttf */; };
 		E110A104156EC9230045AB96 /* UIFont+SnapAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = E110A103156EC9230045AB96 /* UIFont+SnapAdditions.m */; };
 		E110A108156ECA130045AB96 /* UIButton+SnapAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = E110A107156ECA130045AB96 /* UIButton+SnapAdditions.m */; };
@@ -467,6 +468,8 @@
 		908F1BF6195CD77600C1AE4B /* Demo-0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Demo-0.png"; sourceTree = "<group>"; };
 		908F1BF7195CD77600C1AE4B /* Demo-0@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Demo-0@2x.png"; sourceTree = "<group>"; };
 		908F1BFA195CDB3B00C1AE4B /* GameGlobals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameGlobals.h; sourceTree = "<group>"; };
+		908F1BFB195E1BB800C1AE4B /* PacketUpdateCards.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PacketUpdateCards.h; path = Snap/PacketUpdateCards.h; sourceTree = "<group>"; };
+		908F1BFC195E1BB800C1AE4B /* PacketUpdateCards.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PacketUpdateCards.m; path = Snap/PacketUpdateCards.m; sourceTree = "<group>"; };
 		E110A0FF156EC8DD0045AB96 /* Action_Man.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Action_Man.ttf; sourceTree = "<group>"; };
 		E110A102156EC9230045AB96 /* UIFont+SnapAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "UIFont+SnapAdditions.h"; path = "Snap/UIFont+SnapAdditions.h"; sourceTree = "<group>"; };
 		E110A103156EC9230045AB96 /* UIFont+SnapAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIFont+SnapAdditions.m"; path = "Snap/UIFont+SnapAdditions.m"; sourceTree = "<group>"; };
@@ -882,6 +885,8 @@
 				35E647571571712A00F1073A /* PacketServerReady.m */,
 				35E6485215717D9100F1073A /* PacketOtherClientQuit.h */,
 				35E6485315717D9200F1073A /* PacketOtherClientQuit.m */,
+				908F1BFB195E1BB800C1AE4B /* PacketUpdateCards.h */,
+				908F1BFC195E1BB800C1AE4B /* PacketUpdateCards.m */,
 				35E6486F1572698000F1073A /* PacketDealCards.h */,
 				35E648701572698000F1073A /* PacketDealCards.m */,
 				35E6487215726D3500F1073A /* PacketActivatePlayer.h */,
@@ -1143,6 +1148,7 @@
 				E110A104156EC9230045AB96 /* UIFont+SnapAdditions.m in Sources */,
 				E110A108156ECA130045AB96 /* UIButton+SnapAdditions.m in Sources */,
 				E110A10B156ECC870045AB96 /* HostViewController.m in Sources */,
+				908F1BFD195E1BB800C1AE4B /* PacketUpdateCards.m in Sources */,
 				E110A111156ED1410045AB96 /* JoinViewController.m in Sources */,
 				E110A119156ED5780045AB96 /* MatchmakingServer.m in Sources */,
 				E110A11D156FD0910045AB96 /* MatchmakingClient.m in Sources */,

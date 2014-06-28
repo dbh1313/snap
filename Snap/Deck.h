@@ -10,7 +10,10 @@
 
 @interface Deck : NSObject
 
-- (id)initWithFiles:(NSMutableArray*)files;
+@property (nonatomic, assign, readonly) int file;
+@property (nonatomic, assign, readonly) int value;
+
+- (id)initWithFiles:(NSMutableArray*)files values:(NSMutableArray*)values;
 - (void)shuffle;
 - (Card *)draw;
 - (int)cardsRemaining;

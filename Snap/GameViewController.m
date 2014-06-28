@@ -13,6 +13,7 @@
 #import "CardView.h"
 #import "Player.h"
 #import "Stack.h"
+#import "PacketUpdateCards.h"
 
 @interface GameViewController ()
 
@@ -105,7 +106,7 @@
 {
 	[super viewDidLoad];
     
-	self.centerLabel.font = [UIFont rw_snapFontWithSize:18.0f];
+//	self.centerLabel.font = [UIFont rw_snapFontWithSize:18.0f];
     
 	self.snapButton.hidden = YES;
 	self.nextRoundButton.hidden = YES;
@@ -264,7 +265,7 @@
 {
 	for (CardView *cardView in self.cardContainerView.subviews)
 	{
-		if (cardView.card == card)
+		if (cardView.card.file == card.file)
 			return cardView;
 	}
 	return nil;
@@ -342,16 +343,21 @@
 		for (PlayerPosition p = startingPlayer.position; p < startingPlayer.position + 4; ++p)
 		{
 			Player *player = [self.game playerAtPosition:p % 4];
-			if (player != nil && t < [player.closedCards cardCount])
+			if (player != nil && t < [player.closedCards cardCount] &&
+//                !self.game.isServer &&
+                [self.game.playerName compare:player.name] == NSOrderedSame)
 			{
 				CardView *cardView = [[CardView alloc] initWithFrame:CGRectMake(0, 0, CardWidth, CardHeight)];
 				cardView.card = [player.closedCards cardAtIndex:t];
 				[self.cardContainerView addSubview:cardView];
-				[cardView animateDealingToPlayer:player withDelay:delay];
+				[cardView animateDealingToPlayer:player withDelay:delay isServer:self.game.isServer];
 				delay += 0.1f;
 			}
 		}
 	}
+    
+//    NSLog(@"Testing:%@", self.game.quest);
+//	self.centerLabel.text = NSLocalizedString(@"%@", self.game.quest);
     
     [self performSelector:@selector(afterDealing) withObject:nil afterDelay:delay];
 }
@@ -383,10 +389,15 @@
 		case PlayerPositionRight:  self.playerActiveRightImageView.hidden  = NO; break;
 	}
     
-	if (position == PlayerPositionBottom)
-		self.centerLabel.text = NSLocalizedString(@"Your turn. Tap the stack.", @"Status text: your turn");
-	else
-		self.centerLabel.text = [NSString stringWithFormat:NSLocalizedString(@"%@'s turn", @"Status text: other player's turn"), [self.game activePlayer].name];
+    if (1) {
+        self.centerLabel.text = NSLocalizedString(@"What do the following have in common?", nil);
+    }
+	else {
+        if (position == PlayerPositionBottom)
+            self.centerLabel.text = NSLocalizedString(@"Your turn. Tap the stack.", @"Status text: your turn");
+        else
+            self.centerLabel.text = [NSString stringWithFormat:NSLocalizedString(@"%@'s turn", @"Status text: other player's turn"), [self.game activePlayer].name];
+    }
 }
 
 - (void)game:(Game *)game player:(Player *)player turnedOverCard:(Card *)card
@@ -402,6 +413,89 @@
 - (IBAction)turnOverPressed:(id)sender
 {
 	[self showTappedView];
+}
+
+- (IBAction)turnOnPressed:(UIButton *)button forEvent:(UIEvent *)event {
+    float screenHeight = [UIScreen mainScreen].applicationFrame.size.width; // hackday, too lazy to get proper orientation
+    UITouch *touch = (UITouch *)[[[event allTouches] allObjects] objectAtIndex: 0];
+    CGPoint touchPos = [touch locationInView:nil];
+    float x = touchPos.x;
+    touchPos.x = touchPos.y;
+    touchPos.y = x;
+    touchPos.y = screenHeight - touchPos.y;
+
+    NSLog(@"Hit position: %f, %f", touchPos.x, touchPos.y);
+    
+    // Determine which card this button was pressing
+    for (int i = 0; i < 4; i++) {
+        Player *player = [self.game playerAtPosition:i];
+        if (player != nil && [self.game.playerName compare:player.name] == NSOrderedSame)
+        {
+            // This is us, check if we have any cards off in this area...
+            for(int j = 0; j < player.openCards.cardCount; j++) {
+                Card* card = [player.openCards cardAtIndex:j];
+                CardView* cardView = [self cardViewForCard:card];
+                NSLog(@"Card position: %f, %f", cardView.center.x, cardView.center.y);
+                if (touchPos.x >= (cardView.center.x - CardWidth / 2.0f) &&
+                    touchPos.x <= (cardView.center.x + CardWidth / 2.0f) &&
+                    touchPos.y >= (cardView.center.y - CardWidth / 2.0f) &&
+                    touchPos.y <= (cardView.center.y + CardWidth / 2.0f)) {
+                    NSLog(@"Hit Card %i", j);
+                    
+                    // Push this card on
+                    [cardView animateCardOnOffForPlayerWithDirection:1];
+                    
+                    Packet *packet = [PacketUpdateCards packetWithCard:card];
+                    [self.game sendPacketToServer:packet];
+                    return; // only need one card per hit
+                }
+            }
+        }
+    }
+}
+
+- (IBAction)turnOffPressedEvent:(UIButton *)button forEvent:(UIEvent *)event {
+    float screenHeight = [UIScreen mainScreen].applicationFrame.size.width; // hackday, too lazy to get proper orientation
+    UITouch *touch = (UITouch *)[[[event allTouches] allObjects] objectAtIndex: 0];
+    CGPoint touchPos = [touch locationInView:nil];
+    float x = touchPos.x;
+    touchPos.x = touchPos.y;
+    touchPos.y = x;
+    touchPos.y = screenHeight - touchPos.y;
+    
+    NSLog(@"Hit position: %f, %f", touchPos.x, touchPos.y);
+    
+    // Determine which card this button was pressing
+    for (int i = 0; i < 4; i++) {
+        Player *player = [self.game playerAtPosition:i];
+        if (player != nil && [self.game.playerName compare:player.name] == NSOrderedSame)
+        {
+            // This is us, check if we have any cards off in this area...
+            for(int j = 0; j < player.openCards.cardCount; j++) {
+                Card* card = [player.openCards cardAtIndex:j];
+                CardView* cardView = [self cardViewForCard:card];
+                NSLog(@"Card position: %f, %f", cardView.center.x, cardView.center.y);
+                if (touchPos.x >= (cardView.center.x - CardWidth / 2.0f) &&
+                    touchPos.x <= (cardView.center.x + CardWidth / 2.0f) &&
+                    touchPos.y >= (cardView.center.y - CardWidth / 2.0f) &&
+                    touchPos.y <= (cardView.center.y + CardWidth / 2.0f)) {
+                    NSLog(@"Hit Card %i", j);
+                    
+                    // Push this card off
+                    [cardView animateCardOnOffForPlayerWithDirection:-1];
+                    
+                    Packet *packet = [PacketUpdateCards packetWithCard:card];
+                    [self.game sendPacketToServer:packet];
+                    return; // only need one card per hit
+                }
+            }
+        }
+    }
+}
+
+- (IBAction)turnOffPressed:(id)sender
+{
+    NSLog(@"Pressed Turn Off");
 }
 
 - (IBAction)turnOverEnter:(id)sender
@@ -433,6 +527,60 @@
 	[self showPlayerLabels];
 	[self calculateLabelFrames];
 	[self updateWinsLabels];
+}
+
+- (void)gameUpdateServerCards:(Game *)game card:(Card *) card
+{
+    CardView* cardView = [self cardViewForCard:card];
+    
+    // Determine if we should update this card
+    if (cardView.card.isActive) {
+        // Turn it off for sure
+        [cardView animateCardOnOffForServer:NO inSlot:cardView.card.inSlot];
+        cardView.card.isActive = NO;
+        cardView.card.inSlot = -1;
+    }
+    else {
+        // Do we have room to activate?
+        int countEnabled = 0;
+        int usedSlots[MAX_CORRECT_CARDS] = { 0, 0, 0, 0, 0 };
+        for (CardView *testCardView in self.cardContainerView.subviews)
+        {
+            if (testCardView.card.isActive)
+            {
+                countEnabled++;
+                if (testCardView.card.inSlot >= 0) {
+                    usedSlots[testCardView.card.inSlot] = 1;
+                }
+            }
+        }
+        
+        if (countEnabled < MAX_CORRECT_CARDS) {
+            // Turn it on for sure in first available slot
+            for (int i = 0; i < MAX_CORRECT_CARDS; i++) {
+                if (usedSlots[i] == 0) {
+                    [cardView animateCardOnOffForServer:YES inSlot:i];
+                    cardView.card.isActive = YES;
+                    cardView.card.inSlot = i;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Check if the cards in slot are all correct
+    int totalCorrect = 0;
+    for (CardView *cardView in self.cardContainerView.subviews)
+    {
+        if (cardView.card.isActive && cardView.card.value == 1) {
+            totalCorrect++;
+        }
+    }
+    NSLog(@"Total Correct: %i", totalCorrect);
+    if (totalCorrect == MAX_CORRECT_CARDS) {
+        [self.game endGame];
+        self.centerLabel.text = NSLocalizedString(@"Real Housewives of Orange County!", nil);
+    }
 }
 
 - (void)showPlayerLabels

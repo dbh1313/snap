@@ -6,9 +6,6 @@
 //  Copyright (c) 2012 Hollance. All rights reserved.
 //
 
-const CGFloat CardWidth;
-const CGFloat CardHeight;
-
 @class Card;
 @class Player;
 
@@ -16,7 +13,9 @@ const CGFloat CardHeight;
 
 @property (nonatomic, strong) Card *card;
 
-- (void)animateDealingToPlayer:(Player *)player withDelay:(NSTimeInterval)delay;
+- (void)animateDealingToPlayer:(Player *)player withDelay:(NSTimeInterval)delay isServer:(BOOL)isServer;
 - (void)animateTurningOverForPlayer:(Player *)player;
+- (void)animateCardOnOffForPlayerWithDirection:(int)direction;
+- (void)animateCardOnOffForServer:(BOOL)on inSlot:(int)inSlot;
 
 @end
