@@ -1,6 +1,6 @@
 
 // Variables for gameplay
-#define MAX_CARDS_PER_QUEST 10
+#define MAX_CARDS_PER_QUEST 12
 #define MAX_CORRECT_CARDS 5
 
 

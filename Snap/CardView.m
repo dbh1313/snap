@@ -107,7 +107,7 @@
 		_frontImageView.hidden = YES;
 		[self addSubview:_frontImageView];
         
-		NSString *filename = [NSString stringWithFormat:@"Demo-%i", 0/*self.card.file*/];
+		NSString *filename = [NSString stringWithFormat:@"Demo-%i", self.card.file];
 		_frontImageView.image = [UIImage imageNamed:filename];
 	}
 }

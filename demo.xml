@@ -12,15 +12,15 @@
             </card>
             <card>
                 <img>1</img>
-                <value>0</value>
-            </card>
-            <card>
-                <img>2</img>
                 <value>1</value>
             </card>
             <card>
-                <img>3</img>
+                <img>2</img>
                 <value>0</value>
+            </card>
+            <card>
+                <img>3</img>
+                <value>1</value>
             </card>
             <card>
                 <img>4</img>
@@ -28,15 +28,15 @@
             </card>
             <card>
                 <img>5</img>
-                <value>0</value>
+                <value>1</value>
             </card>
             <card>
                 <img>6</img>
-                <value>1</value>
+                <value>0</value>
             </card>
             <card>
                 <img>7</img>
-                <value>1</value>
+                <value>0</value>
             </card>
             <card>
                 <img>8</img>
@@ -44,6 +44,14 @@
             </card>
             <card>
                 <img>9</img>
+                <value>0</value>
+            </card>
+            <card>
+                <img>10</img>
+                <value>0</value>
+            </card>
+            <card>
+                <img>11</img>
                 <value>0</value>
             </card>
         </cards>
