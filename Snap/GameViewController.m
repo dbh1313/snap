@@ -391,6 +391,13 @@
     
     if (1) {
         self.centerLabel.text = NSLocalizedString(@"What do the following have in common?", nil);
+        
+        if (self.game.isServer) {
+            AVSpeechSynthesizer *synthesizer = [[AVSpeechSynthesizer alloc]init];
+            AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:@"First question. What do the following have in common?"];
+            [utterance setRate:0.3f];
+            [synthesizer speakUtterance:utterance];
+        }
     }
 	else {
         if (position == PlayerPositionBottom)
@@ -570,16 +577,38 @@
     
     // Check if the cards in slot are all correct
     int totalCorrect = 0;
+    int totalPushed = 0;
     for (CardView *cardView in self.cardContainerView.subviews)
     {
         if (cardView.card.isActive && cardView.card.value == 1) {
             totalCorrect++;
+        }
+        if (cardView.card.isActive) {
+            totalPushed++;
         }
     }
     NSLog(@"Total Correct: %i", totalCorrect);
     if (totalCorrect == MAX_CORRECT_CARDS) {
         [self.game endGame];
         self.centerLabel.text = NSLocalizedString(@"Real Housewives of Orange County!", nil);
+        
+        if (self.game.isServer) {
+            AVSpeechSynthesizer *synthesizer = [[AVSpeechSynthesizer alloc]init];
+            AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:@"That's right! The Real Housewives of Orange County."];
+            [utterance setRate:0.3f];
+            [synthesizer speakUtterance:utterance];
+        }
+    }
+    
+    if(totalPushed == MAX_CORRECT_CARDS && totalCorrect < MAX_CORRECT_CARDS) {
+        if (self.game.isServer) {
+            int numIncorrect = MAX_CORRECT_CARDS - totalCorrect;
+            
+            AVSpeechSynthesizer *synthesizer = [[AVSpeechSynthesizer alloc]init];
+            AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString: [NSString stringWithFormat:@"Sorry, that's not right... %i %@ not correct.", numIncorrect, (numIncorrect == 1) ? @"is" : @"are"]];
+            [utterance setRate:0.3f];
+            [synthesizer speakUtterance:utterance];
+        }
     }
 }
 
